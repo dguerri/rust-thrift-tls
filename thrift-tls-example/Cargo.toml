@@ -1,0 +1,16 @@
+[package]
+name = "thrift-tls-example"
+version = "0.1.0"
+authors = ["Davide Guerri <davide.guerri@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.7"
+log = "0.4"
+ordered-float = "1.0"
+rust-thrift-tls = { path = "../rust-thrift-tls" }
+rustls = "0.17"
+thrift = "0.13"
+try_from = "0.3"

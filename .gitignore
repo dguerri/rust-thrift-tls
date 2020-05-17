@@ -1,0 +1,6 @@
+.vscode
+Cargo.lock
+/*.code-workspace
+rust-thrift-tls/target/
+thrift-tls-example/x509/
+thrift-tls-example/target/

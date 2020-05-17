@@ -1,0 +1,15 @@
+[package]
+name = "rust-thrift-tls"
+version = "0.1.0"
+authors = ["Davide Guerri <davide.guerri@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+rustls = "0.17"
+threadpool = "1.8"
+thrift = "0.13"
+webpki = "0.21"
+webpki-roots = "0.19"
