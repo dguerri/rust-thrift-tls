@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 
-use env_logger;
+use env_logger::{self, Env};
 use log;
 use rust_thrift_tls::{KeyPair, TLSTServer};
 use rustls::RootCertStore;
@@ -11,7 +11,8 @@ use thrift::transport::{TFramedReadTransportFactory, TFramedWriteTransportFactor
 use thrift_tls_example::{SimpleServiceSyncHandler, SimpleServiceSyncProcessor};
 
 fn main() {
-    env_logger::init();
+    env_logger::from_env(Env::default().default_filter_or("info")).init();
+
     log::debug!("starting up");
 
     match run() {
@@ -24,17 +25,13 @@ fn main() {
 }
 
 fn run() -> thrift::Result<()> {
-    let mut cert_store = RootCertStore::empty();
-
+    // load the demo root CA certs into the RootCertStore (used to authenticate the clients)
     let file = File::open("x509/rootCA.crt").expect("couldn't open file");
     let mut file = BufReader::new(file);
-
+    let mut cert_store = RootCertStore::empty();
     cert_store
         .add_pem_file(&mut file)
         .expect("failed to add cert to store");
-
-    // set listen address
-    let listen_address = "127.0.0.1:9000";
 
     // create input protocol/transport factory
     let i_tran_fact = TFramedReadTransportFactory::new();
@@ -46,6 +43,8 @@ fn run() -> thrift::Result<()> {
 
     // create the server and start listening
     let processor = SimpleServiceSyncProcessor::new(SimpleServiceHandlerImpl {});
+
+    // create a pre-threaded server
     let mut server = TLSTServer::new(
         i_tran_fact,
         i_prot_fact,
@@ -61,6 +60,8 @@ fn run() -> thrift::Result<()> {
         true,
     );
 
+    // set listen address
+    let listen_address = "127.0.0.1:9000";
     log::info!("binding to {}", listen_address);
     server.listen(&listen_address)
 }

@@ -2,6 +2,7 @@ use log;
 use std::fs::File;
 use std::io::BufReader;
 
+use env_logger::{self, Env};
 use rust_thrift_tls::{KeyPair, TLSTTcpChannel};
 use rustls::RootCertStore;
 use thrift::protocol::{TCompactInputProtocol, TCompactOutputProtocol};
@@ -10,7 +11,8 @@ use thrift::transport::{TFramedReadTransport, TFramedWriteTransport, TIoChannel}
 use thrift_tls_example::{SimpleServiceSyncClient, TSimpleServiceSyncClient};
 
 fn main() {
-    env_logger::init();
+    env_logger::from_env(Env::default().default_filter_or("info")).init();
+
     log::info!("starting up");
 
     match run() {
@@ -23,24 +25,26 @@ fn main() {
 }
 
 fn run() -> thrift::Result<()> {
-    let mut cert_store = RootCertStore::empty();
-
+    // load the demo root CA certs into the RootCertStore
     let file = File::open("x509/rootCA.crt").expect("couldn't open file");
     let mut file = BufReader::new(file);
-
+    let mut cert_store = RootCertStore::empty();
     cert_store
         .add_pem_file(&mut file)
         .expect("failed to add cert to store");
 
-    let mut c = TLSTTcpChannel::new();
+    // define credentials for the client
     let key_pair = KeyPair {
         cert_file: "x509/client.crt",
         key_file: "x509/client.key",
     };
+
+    // open the connection and start the TLS session
+    let mut c = TLSTTcpChannel::new();
     c.open("localhost:9000", Some(key_pair), Some(cert_store))?;
-    let (i_chan, o_chan) = c.split()?;
 
     // build the input/output protocol
+    let (i_chan, o_chan) = c.split()?;
     let i_prot = TCompactInputProtocol::new(TFramedReadTransport::new(i_chan));
     let o_prot = TCompactOutputProtocol::new(TFramedWriteTransport::new(o_chan));
 
