@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 PASSPHRASE="do not use"
+KEYBITS=512
 
 set -euo pipefail
 
@@ -12,13 +13,13 @@ rm -rf "${BASEDIR}/x509" ${BASEDIR}/src/simple_service.rs
 mkdir "${BASEDIR}/x509"
 cd "${BASEDIR}/x509"
 echo "Generating CA"
-openssl genrsa -passout "pass:${PASSPHRASE}" -aes256 -out rootCA.key 2048
+openssl genrsa -passout "pass:${PASSPHRASE}" -aes256 -out rootCA.key "${KEYBITS}"
 openssl req -x509 -new -nodes -key rootCA.key -passin "pass:${PASSPHRASE}" -sha256 -days 1024 -out rootCA.crt \
     -subj "/CN=Do Not Trust This CA/C=UK/ST=England/L=London/O=None/emailAddress=davide.guerri@gmail.com/"
 openssl x509 -in rootCA.crt -text -noout
 
 echo "Generating server cert"
-openssl genrsa -out server.key 2048
+openssl genrsa -out server.key "${KEYBITS}"
 openssl req \
     -subj "/CN=localhost/C=UK/ST=England/L=London/O=None/emailAddress=davide.guerri@gmail.com/" \
     -new -key server.key -out server.csr
@@ -30,7 +31,7 @@ openssl x509 -in server.crt -text -noout
 rm server.csr
 
 echo "Generating client cert"
-openssl genrsa -out client.key 2048
+openssl genrsa -out client.key "${KEYBITS}"
 openssl req \
     -subj "/CN=this is a client/C=UK/ST=England/L=London/O=None/emailAddress=davide.guerri@gmail.com/" \
     -new -key client.key -out client.csr

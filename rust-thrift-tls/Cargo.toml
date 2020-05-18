@@ -13,3 +13,8 @@ threadpool = "1.8"
 thrift = "0.13"
 webpki = "0.21"
 webpki-roots = "0.19"
+
+[dev-dependencies]
+tempfile = "3.1"
+filename = "0.1"
+pem-parser = "0.1"

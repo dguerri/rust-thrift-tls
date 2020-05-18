@@ -32,44 +32,6 @@ pub type TLSStream<S> = Arc<Mutex<RusTLSStream<S, TcpStream>>>;
 
 /// Bidirectional TCP/IP channel.
 ///
-/// # Examples
-///
-/// Create a `TLSTTcpChannel`.
-///
-/// ```no_run
-/// use std::io::{Read, Write};
-/// use rust_thrift_tls::TLSTTcpChannel;
-///
-/// let mut c = TLSTTcpChannel::new();
-/// c.open("localhost:9090", None, None).unwrap();
-///
-/// let mut buf = vec![0u8; 4];
-/// c.read(&mut buf).unwrap();
-/// c.write(&vec![0, 1, 2]).unwrap();
-/// ```
-///
-/// Create a `TLSTTcpChannel` by wrapping an existing `TcpStream`.
-///
-/// ```no_run
-/// use std::io::{Read, Write};
-/// use std::net::TcpStream;
-/// use rust_thrift_tls::TLSTTcpChannel;
-/// use rustls::StreamOwned as RusTLSStream;
-/// use rustls::{ClientSession, RootCertStore, ServerSession, Session};
-///
-/// let config = super::make_tls_client_config(key_pair, root_cert_store);
-/// let sess = ClientSession::new(&config, dns_name);
-/// let sock = TcpStream::connect("127.0.0.1:9189").unwrap();
-/// // create a TLS session sream. Reads and writes will be performed on it
-/// let stream = Arc::new(Mutex::new(RusTLSStream::new(sess, sock)));
-///
-/// // no need to call c.open() since we've already connected above
-/// let mut c = TLSTTcpChannel::with_stream(stream);
-///
-/// let mut buf = vec![0u8; 4];
-/// c.read(&mut buf).unwrap();
-/// c.write(&vec![0, 1, 2]).unwrap();
-/// ```
 pub struct TLSTTcpChannel<S>
 where
     S: Session,
