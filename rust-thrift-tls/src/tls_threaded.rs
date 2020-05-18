@@ -261,7 +261,7 @@ fn handle_incoming_connection<PRC>(
     loop {
         let r = processor.process(&mut *i_prot, &mut *o_prot);
         if let Err(e) = r {
-            log::warn!("processor completed with error: {:?}", e);
+            log::debug!("processor completed with error: {:?}", e);
             break;
         }
     }
