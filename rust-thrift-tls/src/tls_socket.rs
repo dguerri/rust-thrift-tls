@@ -26,7 +26,7 @@ use rustls::StreamOwned as RusTLSStream;
 use rustls::{ClientSession, RootCertStore, ServerSession, Session};
 use webpki;
 
-use super::KeyPair;
+use super::X509Credentials;
 
 pub type TLSStream<S> = Arc<Mutex<RusTLSStream<S, TcpStream>>>;
 
@@ -133,13 +133,13 @@ impl TLSTTcpChannel<ServerSession> {
 
 impl TLSTTcpChannel<ClientSession> {
     /// Connect to `remote_address`, which should have the form `host:port`.
-    /// Client authentication can be enabled by passing a `rust_thrift_tls::KeyPair`
+    /// Client authentication can be enabled by passing a `rust_thrift_tls::X509Credentials`
     /// By Default `webpki_roots::TLS_SERVER_ROOTS` is used to validate server certs
     /// that can be overrode by passing a cusrom `rustls::RootCertStore`
     pub fn open(
         &mut self,
         remote_address: &str,
-        key_pair: Option<KeyPair>,
+        key_pair: Option<X509Credentials>,
         root_cert_store: Option<RootCertStore>,
     ) -> thrift::Result<()> {
         if self.stream.is_some() {

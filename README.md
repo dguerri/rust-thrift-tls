@@ -29,7 +29,11 @@ Use `RUST_LOG=debug` to see debug messages
 ```rust
     let mut c = TLSTTcpChannel::new();
     // create a new TLS session with default (embedded) RootCertStore
-    c.open("localhost:9000", None, None)?;
+    c.open(
+        "localhost:9000",
+        None, // Do not perform client auth
+        None, // Default (embedded RootCertStore)
+    )?;
 
     // build the input/output protocol as usual (see "plain" Thrift examples)
     // [...]
@@ -49,10 +53,7 @@ Use `RUST_LOG=debug` to see debug messages
         o_prot_fact,
         processor,
         10,
-        KeyPair {
-            cert_file: "x509/server.crt",
-            key_file: "x509/server.key",
-        },
+        X509Credentials::new("x509/server.crt", "x509/server.key"),
         None,   // Default (embedded RootCertStore)
         false,  // Client authentication not required
     );

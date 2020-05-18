@@ -3,7 +3,7 @@ use std::io::BufReader;
 
 use env_logger::{self, Env};
 use log;
-use rust_thrift_tls::{KeyPair, TLSTServer};
+use rust_thrift_tls::{TLSTServer, X509Credentials};
 use rustls::RootCertStore;
 use thrift::protocol::{TCompactInputProtocolFactory, TCompactOutputProtocolFactory};
 use thrift::transport::{TFramedReadTransportFactory, TFramedWriteTransportFactory};
@@ -52,10 +52,7 @@ fn run() -> thrift::Result<()> {
         o_prot_fact,
         processor,
         10,
-        KeyPair {
-            cert_file: "x509/server.crt",
-            key_file: "x509/server.key",
-        },
+        X509Credentials::new("x509/server.crt", "x509/server.key"),
         Some(cert_store),
         true,
     );

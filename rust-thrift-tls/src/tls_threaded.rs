@@ -32,7 +32,7 @@ use rustls::ServerSession as RusTLSServerSession;
 use rustls::StreamOwned as RusTLSStream;
 use rustls::{RootCertStore, ServerConfig, Session};
 
-use super::{KeyPair, TLSStream, TLSTTcpChannel};
+use super::{TLSStream, TLSTTcpChannel, X509Credentials};
 
 /// Fixed-size thread-pool blocking Thrift server.
 ///
@@ -160,7 +160,7 @@ where
         output_protocol_factory: OPF,
         processor: PRC,
         num_workers: usize,
-        key_pair: KeyPair,
+        key_pair: X509Credentials,
         root_cert_store: Option<RootCertStore>,
         require_client_auth: bool,
     ) -> TLSTServer<PRC, RTF, IPF, WTF, OPF> {

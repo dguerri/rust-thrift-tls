@@ -13,9 +13,19 @@ use rustls::{
     KeyLogFile, NoClientAuth, PrivateKey, RootCertStore, ServerConfig,
 };
 
-pub struct KeyPair<'a> {
-    pub cert_file: &'a str,
-    pub key_file: &'a str,
+#[derive(Debug)]
+pub struct X509Credentials {
+    certs: Vec<Certificate>,
+    key: PrivateKey,
+}
+
+impl X509Credentials {
+    pub fn new(certs_file: &str, key_file: &str) -> X509Credentials {
+        X509Credentials {
+            certs: load_certs(certs_file),
+            key: load_private_key(key_file),
+        }
+    }
 }
 
 fn load_certs(filename: &str) -> Vec<Certificate> {
@@ -49,17 +59,15 @@ fn load_private_key(filename: &str) -> PrivateKey {
 }
 
 fn make_tls_client_config(
-    key_pair: Option<KeyPair>,
+    key_pair: Option<X509Credentials>,
     root_cert_store: Option<RootCertStore>,
 ) -> Arc<ClientConfig> {
     let mut config = ClientConfig::new();
     config.key_log = Arc::new(KeyLogFile::new());
 
     if let Some(kp) = key_pair {
-        let certs = load_certs(kp.cert_file);
-        let privkey = load_private_key(kp.key_file);
         config
-            .set_single_client_cert(certs, privkey)
+            .set_single_client_cert(kp.certs, kp.key)
             .expect("bad certificates/private key");
     }
 
@@ -75,7 +83,7 @@ fn make_tls_client_config(
 }
 
 fn make_tls_server_config(
-    key_pair: KeyPair,
+    key_pair: X509Credentials,
     root_cert_store: Option<RootCertStore>,
     require_client_auth: bool,
 ) -> Arc<ServerConfig> {
@@ -93,10 +101,8 @@ fn make_tls_server_config(
     let mut config = rustls::ServerConfig::new(client_auth);
     config.key_log = Arc::new(rustls::KeyLogFile::new());
 
-    let certs = load_certs(key_pair.cert_file);
-    let privkey = load_private_key(key_pair.key_file);
     config
-        .set_single_cert(certs, privkey)
+        .set_single_cert(key_pair.certs, key_pair.key)
         .expect("bad certificates/private key");
 
     Arc::new(config)

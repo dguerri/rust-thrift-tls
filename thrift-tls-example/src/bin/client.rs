@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::BufReader;
 
 use env_logger::{self, Env};
-use rust_thrift_tls::{KeyPair, TLSTTcpChannel};
+use rust_thrift_tls::{TLSTTcpChannel, X509Credentials};
 use rustls::RootCertStore;
 use thrift::protocol::{TCompactInputProtocol, TCompactOutputProtocol};
 use thrift::transport::{TFramedReadTransport, TFramedWriteTransport, TIoChannel};
@@ -34,10 +34,7 @@ fn run() -> thrift::Result<()> {
         .expect("failed to add cert to store");
 
     // define credentials for the client
-    let key_pair = KeyPair {
-        cert_file: "x509/client.crt",
-        key_file: "x509/client.key",
-    };
+    let key_pair = X509Credentials::new("x509/client.crt", "x509/client.key");
 
     // open the connection and start the TLS session
     let mut c = TLSTTcpChannel::new();
