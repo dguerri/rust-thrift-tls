@@ -1,8 +1,13 @@
 [package]
 name = "rust-thrift-tls"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Davide Guerri <davide.guerri@gmail.com>"]
 edition = "2018"
+description = "Client and Server TLS support for Apache Thrift"
+readme = "README.md"
+repository = "https://github.com/dguerri/rust-thrift-tls"
+license-file = "LICENSE"
+keywords = ["thrift", "TLS"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
