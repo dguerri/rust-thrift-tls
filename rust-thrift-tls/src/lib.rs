@@ -4,9 +4,9 @@ pub mod tls_threaded;
 pub use tls_socket::*;
 pub use tls_threaded::*;
 
-use std::ffi::OsString;
 use std::fs;
 use std::io::BufReader;
+use std::path::Path;
 use std::sync::Arc;
 
 use rustls::{
@@ -22,7 +22,7 @@ pub struct X509Credentials {
 }
 
 impl X509Credentials {
-    pub fn new(certs_file: &OsString, key_file: &OsString) -> X509Credentials {
+    pub fn new<P: AsRef<Path>>(certs_file: P, key_file: P) -> X509Credentials {
         X509Credentials {
             certs: load_certs(certs_file),
             key: load_private_key(key_file),
@@ -30,22 +30,22 @@ impl X509Credentials {
     }
 }
 
-fn load_certs(filename: &OsString) -> Vec<Certificate> {
+fn load_certs<P: AsRef<Path>>(filename: P) -> Vec<Certificate> {
     let certfile = fs::File::open(filename).expect("cannot open certificate file");
     let mut reader = BufReader::new(certfile);
     rustls::internal::pemfile::certs(&mut reader).unwrap()
 }
 
-fn load_private_key(filename: &OsString) -> PrivateKey {
+fn load_private_key<P: AsRef<Path>>(filename: P) -> PrivateKey {
     let rsa_keys = {
-        let keyfile = fs::File::open(filename).expect("cannot open private key file");
+        let keyfile = fs::File::open(filename.as_ref()).expect("cannot open private key file");
         let mut reader = BufReader::new(keyfile);
         rustls::internal::pemfile::rsa_private_keys(&mut reader)
             .expect("file contains invalid rsa private key")
     };
 
     let pkcs8_keys = {
-        let keyfile = fs::File::open(filename).expect("cannot open private key file");
+        let keyfile = fs::File::open(filename.as_ref()).expect("cannot open private key file");
         let mut reader = BufReader::new(keyfile);
         rustls::internal::pemfile::pkcs8_private_keys(&mut reader)
             .expect("file contains invalid pkcs8 private key (encrypted keys not supported)")
