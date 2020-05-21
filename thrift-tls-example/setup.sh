@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PASSPHRASE="do not use"
-KEYBITS=512
+KEYBITS=2048
 
 set -euo pipefail
 
