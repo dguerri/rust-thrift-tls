@@ -199,8 +199,8 @@ FBb23qfrJDhcsJ8vi+WO8Jrc5vG5crIKZTG+tmjFt7xU861fraZc6Q==
         let der_key = pem_parser::pem_to_der(PEM_KEY);
 
         assert_eq!(der_key, x509_credentials.key.0);
-        assert_eq!(der_ca_cert, x509_credentials.certs[0].0);
-        assert_eq!(der_server_cert, x509_credentials.certs[1].0);
+        assert_eq!(der_ca_cert, x509_credentials.certs[0].as_ref());
+        assert_eq!(der_server_cert, x509_credentials.certs[1].as_ref());
 
         Ok(())
     }
