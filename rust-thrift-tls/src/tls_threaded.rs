@@ -16,7 +16,6 @@
 // under the License.
 
 use log;
-use std::io::Write;
 use std::net::TcpListener;
 use std::sync::{Arc, Mutex};
 use threadpool::ThreadPool;
@@ -30,9 +29,11 @@ use thrift::{ApplicationError, ApplicationErrorKind};
 
 use rustls::ServerSession as RusTLSServerSession;
 use rustls::StreamOwned as RusTLSStream;
-use rustls::{RootCertStore, ServerConfig, Session};
+use rustls::{RootCertStore, ServerConfig, ServerSession};
 
 use super::{TLSStream, TLSTTcpChannel, X509Credentials};
+
+type ConnectionHook = fn(TLSStream<ServerSession>);
 
 /// Fixed-size thread-pool blocking Thrift server.
 ///
@@ -60,6 +61,7 @@ where
     processor: Arc<PRC>,
     worker_pool: ThreadPool,
     tls_config: Arc<ServerConfig>,
+    connection_hook: Option<ConnectionHook>,
 }
 
 impl<PRC, RTF, IPF, WTF, OPF> TLSTServer<PRC, RTF, IPF, WTF, OPF>
@@ -77,6 +79,13 @@ where
     /// `read_transport_factory` and `input_protocol_factory` to create
     /// implementations for the input, and `write_transport_factory` and
     /// `output_protocol_factory` to create implementations for the output.
+    ///     
+    /// `root_cert_store` contains the trust anchors. If `None`, the default
+    /// (embedded) will be used
+    /// `require_client_auth` is true if client authentication is enforced.
+    /// `connection_hook` is an optional callback function that is executed
+    /// right after a new connection is established and typically before
+    /// TLS handshake is performed.
     pub fn new(
         read_transport_factory: RTF,
         input_protocol_factory: IPF,
@@ -87,6 +96,7 @@ where
         key_pair: X509Credentials,
         root_cert_store: Option<RootCertStore>,
         require_client_auth: bool,
+        connection_hook: Option<ConnectionHook>,
     ) -> TLSTServer<PRC, RTF, IPF, WTF, OPF> {
         TLSTServer {
             r_trans_factory: read_transport_factory,
@@ -100,6 +110,7 @@ where
                 root_cert_store,
                 require_client_auth,
             ),
+            connection_hook: connection_hook,
         }
     }
 
@@ -118,22 +129,17 @@ where
             match stream {
                 Ok(s) => {
                     let tls_session = RusTLSServerSession::new(&self.tls_config);
-                    let mut so = RusTLSStream::new(tls_session, s);
-                    so.flush().unwrap(); // Execute the TLS handshake
-                    log::debug!("connection from client: {}", so.sock.peer_addr().unwrap());
-                    log::debug!(
-                        "TLS Protocol version: {:?}",
-                        so.sess.get_protocol_version().unwrap()
-                    );
-                    log::debug!(
-                        "TLS Negotiated Cipersuite: {:?}",
-                        so.sess.get_negotiated_ciphersuite().unwrap()
-                    );
+                    let so = RusTLSStream::new(tls_session, s);
                     let ts = Arc::new(Mutex::new(so));
-                    let (i_prot, o_prot) = self.new_protocols_for_connection(ts)?;
+                    let (i_prot, o_prot) = self.new_protocols_for_connection(ts.clone())?;
                     let processor = self.processor.clone();
-                    self.worker_pool
-                        .execute(move || handle_incoming_connection(processor, i_prot, o_prot));
+                    let ch = self.connection_hook;
+                    self.worker_pool.execute(move || {
+                        if ch.is_some() {
+                            ch.unwrap()(ts)
+                        }
+                        handle_incoming_connection(processor, i_prot, o_prot)
+                    });
                 }
                 Err(e) => {
                     log::warn!("failed to accept remote connection with error {:?}", e);

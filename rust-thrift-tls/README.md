@@ -40,7 +40,7 @@ Use `RUST_LOG=debug` to see debug messages
     c.open(
         "localhost:9000",
         None, // Do not perform client auth
-        None, // Default (embedded RootCertStore)
+        None, // Default (embedded) RootCertStore
     )?;
 
     // build the input/output protocol as usual (see "plain" Thrift examples)
@@ -62,8 +62,9 @@ Use `RUST_LOG=debug` to see debug messages
         processor,
         10,
         X509Credentials::new("x509/server.crt", "x509/server.key"),
-        None,   // Default (embedded RootCertStore)
+        None,   // Default (embedded) RootCertStore
         false,  // Client authentication not required
+        None,   // No connection hook
     );
 
     // set listen address

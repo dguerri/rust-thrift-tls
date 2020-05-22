@@ -1,10 +1,12 @@
 use std::fs::File;
 use std::io::BufReader;
+use std::io::Write;
 
 use env_logger::{self, Env};
 use log;
-use rust_thrift_tls::{TLSTServer, X509Credentials};
-use rustls::RootCertStore;
+use rust_thrift_tls::{TLSStream, TLSTServer, X509Credentials};
+use rustls::ServerSession as RusTLSServerSession;
+use rustls::{RootCertStore, Session};
 use thrift::protocol::{TCompactInputProtocolFactory, TCompactOutputProtocolFactory};
 use thrift::transport::{TFramedReadTransportFactory, TFramedWriteTransportFactory};
 
@@ -55,6 +57,7 @@ fn run() -> thrift::Result<()> {
         X509Credentials::new("x509/server.crt", "x509/server.key"),
         Some(cert_store),
         true,
+        Some(connecton_hook),
     );
 
     // set listen address
@@ -71,4 +74,13 @@ impl SimpleServiceSyncHandler for SimpleServiceHandlerImpl {
         log::debug!("Request received for name: '{}'", name);
         Ok(format!("Hello {}!", name))
     }
+}
+
+fn connecton_hook(stream: TLSStream<RusTLSServerSession>) {
+    let mut s = stream.lock().unwrap();
+    if s.sess.is_handshaking() {
+        s.flush().unwrap(); // Perform handshake
+    }
+    let certs = s.sess.get_peer_certificates();
+    log::debug!("Client certificate: {:?}", certs);
 }
