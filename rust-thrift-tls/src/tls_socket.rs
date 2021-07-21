@@ -55,17 +55,6 @@ where
         }
     }
 
-    /// Create a `TLSTTcpChannel` from an existing TLSStream<S>.
-    ///
-    /// The returned instance must be opened using `TLSTTcpChannel::open(...)`
-    /// before it can be used.
-    pub fn with_stream(stream: TLSStream<S>) -> TLSTTcpChannel<S> {
-        TLSTTcpChannel {
-            stream: Option::from(stream),
-            shutdown: Shutdown::Both,
-        }
-    }
-
     /// Shut down this channel.
     ///
     /// Both send and receive halves are closed, and this instance can no
